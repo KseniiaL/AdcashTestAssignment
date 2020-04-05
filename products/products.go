@@ -39,7 +39,10 @@ var products = allProducts {
 }
 
 func GetAllProducts(w http.ResponseWriter, r *http.Request) {
-	json.NewEncoder(w).Encode(products)
+	if err := json.NewEncoder(w).Encode(products); err != nil {
+		log.Printf(err.Error())
+		w.WriteHeader(500)
+	}
 	log.Println("GET: Products")
 }
 
@@ -55,7 +58,11 @@ func GetProductById(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if Prod.ProductID == productID {
-		json.NewEncoder(w).Encode(Prod)
+		if err := json.NewEncoder(w).Encode(Prod); err != nil {
+			log.Printf(err.Error())
+			w.WriteHeader(500)
+			return
+		}
 	} else {
 		fmt.Fprintf(w, "Product with ID %s not found", productID)
 	}
@@ -73,8 +80,11 @@ func GetProductsOfCategory(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	json.NewEncoder(w).Encode(productsOfCategory)
-	
+	if err := json.NewEncoder(w).Encode(productsOfCategory); err != nil {
+		log.Printf(err.Error())
+		w.WriteHeader(500)
+	}
+
 	log.Println("GET: Products of category ", categoryID)
 }
 
@@ -100,11 +110,15 @@ func CreateProduct(w http.ResponseWriter, r *http.Request) {
 
 	reqBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		log.Fatal(err.Error())
 		fmt.Fprintf(w, "Kindly enter data with the product name and description only in order to create")
+		log.Fatal(err.Error())
 	}
 
-	json.Unmarshal(reqBody, &newProduct)
+	if err = json.Unmarshal(reqBody, &newProduct); err != nil {
+		log.Printf("Body parse error, %v", err)
+		w.WriteHeader(400)
+		return
+	}
 	newProduct.ProductID = xid.New().String()
 
 	var usedCategory categories.Category
@@ -119,7 +133,11 @@ func CreateProduct(w http.ResponseWriter, r *http.Request) {
 		products = append(products, newProduct)
 		w.WriteHeader(http.StatusCreated)
 
-		json.NewEncoder(w).Encode(newProduct)
+		if err = json.NewEncoder(w).Encode(newProduct); err != nil {
+			log.Printf(err.Error())
+			w.WriteHeader(500)
+			return
+		}
 	} else {
 		fmt.Fprintf(w, "Category with ID \"%s\" not found. Kindly enter data with the category ID", newProduct.CategoryID)
 	}
@@ -130,12 +148,17 @@ func CreateProduct(w http.ResponseWriter, r *http.Request) {
 func UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	productID := mux.Vars(r)["id"]
 	var updateProduct product
-	//TODO handle category not found
+
 	reqBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		fmt.Fprintf(w, "Kindly enter data with the product name and description only in order to update")
 	}
-	json.Unmarshal(reqBody, &updateProduct)
+
+	if err = json.Unmarshal(reqBody, &updateProduct); err != nil {
+		log.Printf("Body parse error, %v", err)
+		w.WriteHeader(400)
+		return
+	}
 
 	for i, singleProduct := range products {
 		if singleProduct.ProductID == productID {
@@ -155,7 +178,11 @@ func UpdateProduct(w http.ResponseWriter, r *http.Request) {
 			}
 
 			products = append(products[:i], singleProduct)
-			json.NewEncoder(w).Encode(singleProduct)
+			if err = json.NewEncoder(w).Encode(singleProduct); err != nil {
+				log.Printf(err.Error())
+				w.WriteHeader(500)
+				return
+			}
 		}
 	}
 	log.Println("PATCH: Products/", productID)
