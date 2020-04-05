@@ -29,6 +29,13 @@ var products = allProducts {
 		Price: 				100,
 		CategoryID: 		"bq4fasj7jhfi127rimlg",
 	},
+	{
+		ProductID: 			"bq5457j7jhfi2s58o030",
+		ProductName: 		"Nike Icon Clash",
+		ProductDescription: "Women's Seamless Light-Support Sports Bra",
+		Price: 				50,
+		CategoryID: 		"bq4fasj7jhfi127rimlg",
+	},
 }
 
 func GetAllProducts(w http.ResponseWriter, r *http.Request) {
@@ -54,6 +61,23 @@ func GetProductById(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Println("GET: Products/", productID)
+}
+
+func GetProductsOfCategory(w http.ResponseWriter, r *http.Request) {
+	categoryID := mux.Vars(r)["id"]
+
+	//var productsOfCategory []product
+	//productsOfCategory := []product{}
+	productsOfCategory := make([]product, 0)
+	for _, singleProduct := range products {
+		if singleProduct.CategoryID == categoryID {
+			productsOfCategory = append(productsOfCategory, singleProduct)
+		}
+	}
+
+	json.NewEncoder(w).Encode(productsOfCategory)
+	
+	log.Println("GET: Products of category ", categoryID)
 }
 
 func DeleteProduct(w http.ResponseWriter, r *http.Request) {

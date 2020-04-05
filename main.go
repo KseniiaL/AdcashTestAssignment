@@ -26,6 +26,7 @@ func main() {
 	router.HandleFunc("/products/new", products.CreateProduct).Methods("POST")
 	router.HandleFunc("/products/{id}", products.UpdateProduct).Methods("PATCH")
 	router.HandleFunc("/products/{id}", products.DeleteProduct).Methods("DELETE")
-	log.Fatal(http.ListenAndServe(":8080", router))
+	router.HandleFunc("/categories/{id}/products", products.GetProductsOfCategory).Methods("GET")
 	fmt.Println("Server running on: 8080")
+	log.Fatal(http.ListenAndServe(":8080", router))
 }
