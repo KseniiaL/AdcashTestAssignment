@@ -66,8 +66,6 @@ func GetProductById(w http.ResponseWriter, r *http.Request) {
 func GetProductsOfCategory(w http.ResponseWriter, r *http.Request) {
 	categoryID := mux.Vars(r)["id"]
 
-	//var productsOfCategory []product
-	//productsOfCategory := []product{}
 	productsOfCategory := make([]product, 0)
 	for _, singleProduct := range products {
 		if singleProduct.CategoryID == categoryID {
