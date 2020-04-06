@@ -1,3 +1,4 @@
+//package products contains all the requested methods for working with products table
 package products
 
 import (
@@ -11,6 +12,7 @@ import (
 	"net/http"
 )
 
+// product stores information about product fields.
 type product struct {
 	ProductID          string `json:"ProductID"`
 	ProductName        string `json:"ProductName"`
@@ -19,8 +21,10 @@ type product struct {
 	CategoryID 		   string `json:"CategoryID"`
 }
 
+// allProducts is the slice of product structs
 type allProducts []product
 
+// products is the simple imitation of the DB (products table)
 var products = allProducts {
 	{
 		ProductID: 			"bq4foj37jhfipc5nqri0",
@@ -38,17 +42,21 @@ var products = allProducts {
 	},
 }
 
+// GetAllProducts returns products slice in JSON format as a response
 func GetAllProducts(w http.ResponseWriter, r *http.Request) {
+	//define new encoder that writes to the w
 	if err := json.NewEncoder(w).Encode(products); err != nil {
 		log.Printf(err.Error())
 		w.WriteHeader(500)
 	}
-	log.Println("GET: Products")
 }
 
+// GetProductById gets a product id from the request link and looks for the corresponding item in []products
 func GetProductById(w http.ResponseWriter, r *http.Request) {
+	//get product id from the link
 	productID := mux.Vars(r)["id"]
 
+	//find the product with the given id in the slice
 	var Prod product
 	for _, singleProduct := range products {
 		if singleProduct.ProductID == productID {
@@ -57,6 +65,8 @@ func GetProductById(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	//return the product information to ResponseWriter
+	//or log the encoding error
 	if Prod.ProductID == productID {
 		if err := json.NewEncoder(w).Encode(Prod); err != nil {
 			log.Printf(err.Error())
@@ -66,13 +76,14 @@ func GetProductById(w http.ResponseWriter, r *http.Request) {
 	} else {
 		fmt.Fprintf(w, "Product with ID %s not found", productID)
 	}
-
-	log.Println("GET: Products/", productID)
 }
 
+// GetProductsOfCategory gets a category id from the request link and returns all products of the given category in response
 func GetProductsOfCategory(w http.ResponseWriter, r *http.Request) {
+	//get category id from the link
 	categoryID := mux.Vars(r)["id"]
 
+	//define new slice and append it with products which have the same categoryID
 	productsOfCategory := make([]product, 0)
 	for _, singleProduct := range products {
 		if singleProduct.CategoryID == categoryID {
@@ -80,18 +91,21 @@ func GetProductsOfCategory(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	//return the products list to ResponseWriter
+	//or log the encoding error
 	if err := json.NewEncoder(w).Encode(productsOfCategory); err != nil {
 		log.Printf(err.Error())
 		w.WriteHeader(500)
 	}
-
-	log.Println("GET: Products of category ", categoryID)
 }
 
+// DeleteProduct gets a product id from the request link and removes corresponding item from the slice
 func DeleteProduct(w http.ResponseWriter, r *http.Request) {
+	//get product id from the link
 	productID := mux.Vars(r)["id"]
 	productsLength := len(products)
 
+	//find the product with the given id and remove from the slice
 	for i, singleProduct := range products {
 		if singleProduct.ProductID == productID {
 			products = append(products[:i], products[i+1:]...)
@@ -99,28 +113,36 @@ func DeleteProduct(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	//report product with the given id not exists
 	if productsLength == len(products) {
 		fmt.Fprintf(w, "Product with ID %s not found", productID)
 	}
-	log.Println("DELETE: Products/", productID)
 }
 
+// CreateProduct creates a new sample of product, fills it with the information from the request body,
+// and appends to the []products slice
 func CreateProduct(w http.ResponseWriter, r *http.Request) {
 	var newProduct product
 
+	//get the information containing in request's body
+	//or report an error
 	reqBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		fmt.Fprintf(w, "Kindly enter data with the product name and description only in order to create")
 		log.Fatal(err.Error())
 	}
 
+	//unmarshal the information from JSON into the product instance
+	//or report an error
 	if err = json.Unmarshal(reqBody, &newProduct); err != nil {
 		log.Printf("Body parse error, %v", err)
 		w.WriteHeader(400)
 		return
 	}
+	//generate unique productID
 	newProduct.ProductID = xid.New().String()
 
+	//check if the category given exists in categories
 	var usedCategory categories.Category
 	for _, singleCategory := range categories.Categories {
 		if singleCategory.CategoryID == newProduct.CategoryID {
@@ -129,10 +151,13 @@ func CreateProduct(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	//if exists append the new product to the slice
 	if len(newProduct.CategoryID) != 0 && usedCategory.CategoryID == newProduct.CategoryID {
 		products = append(products, newProduct)
 		w.WriteHeader(http.StatusCreated)
 
+		//return the product in response
+		//or report an error
 		if err = json.NewEncoder(w).Encode(newProduct); err != nil {
 			log.Printf(err.Error())
 			w.WriteHeader(500)
@@ -141,31 +166,39 @@ func CreateProduct(w http.ResponseWriter, r *http.Request) {
 	} else {
 		fmt.Fprintf(w, "Category with ID \"%s\" not found. Kindly enter data with the category ID", newProduct.CategoryID)
 	}
-
-	log.Println("POST: Products")
 }
 
+// Update product gets a product id from the request link and replaces the fields in the corresponding product
+// with the given ones in the request body
 func UpdateProduct(w http.ResponseWriter, r *http.Request) {
+	//get product id from the link
 	productID := mux.Vars(r)["id"]
 	var updateProduct product
 
+	//get the information containing in request's body
+	//or report an error
 	reqBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		fmt.Fprintf(w, "Kindly enter data with the product name and description only in order to update")
 	}
 
+	//unmarshal the information from JSON into the product instance
+	//or report an error
 	if err = json.Unmarshal(reqBody, &updateProduct); err != nil {
 		log.Printf("Body parse error, %v", err)
 		w.WriteHeader(400)
 		return
 	}
 
+	//find the given product in the slice by id
 	for i, singleProduct := range products {
 		if singleProduct.ProductID == productID {
+			//change the fields
 			singleProduct.ProductName = updateProduct.ProductName
 			singleProduct.ProductDescription = updateProduct.ProductDescription
 			singleProduct.Price = updateProduct.Price
 
+			//check if a categoryID exists in the categories
 			var usedCategory categories.Category
 			for _, singleCategory := range categories.Categories {
 				if singleCategory.CategoryID == updateProduct.CategoryID {
@@ -173,11 +206,14 @@ func UpdateProduct(w http.ResponseWriter, r *http.Request) {
 					break
 				}
 			}
+			//then replace the categoryID in the product
 			if len(usedCategory.CategoryID) != 0 {
 				singleProduct.CategoryID = updateProduct.CategoryID
 			}
 
 			products = append(products[:i], singleProduct)
+			//return the product in response
+			//or report an error
 			if err = json.NewEncoder(w).Encode(singleProduct); err != nil {
 				log.Printf(err.Error())
 				w.WriteHeader(500)
@@ -185,5 +221,4 @@ func UpdateProduct(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
-	log.Println("PATCH: Products/", productID)
 }
