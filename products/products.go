@@ -57,18 +57,18 @@ func GetProductById(w http.ResponseWriter, r *http.Request) {
 	productID := mux.Vars(r)["id"]
 
 	//find the product with the given id in the slice
-	var Prod product
+	var prod product
 	for _, singleProduct := range products {
 		if singleProduct.ProductID == productID {
-			Prod = singleProduct
+			prod = singleProduct
 			break
 		}
 	}
 
 	//return the product information to ResponseWriter
 	//or log the encoding error
-	if Prod.ProductID == productID {
-		if err := json.NewEncoder(w).Encode(Prod); err != nil {
+	if prod.ProductID == productID {
+		if err := json.NewEncoder(w).Encode(prod); err != nil {
 			log.Printf(err.Error())
 			w.WriteHeader(500)
 			return
@@ -135,7 +135,7 @@ func CreateProduct(w http.ResponseWriter, r *http.Request) {
 	//unmarshal the information from JSON into the product instance
 	//or report an error
 	if err = json.Unmarshal(reqBody, &newProduct); err != nil {
-		log.Printf("Body parse error, %v", err)
+		log.Printf("Body parse error, %v", err.Error())
 		w.WriteHeader(400)
 		return
 	}
@@ -168,7 +168,7 @@ func CreateProduct(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// Update product gets a product id from the request link and replaces the fields in the corresponding product
+// UpdateProduct gets a product id from the request link and replaces the fields in the corresponding product
 // with the given ones in the request body
 func UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	//get product id from the link
@@ -185,7 +185,7 @@ func UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	//unmarshal the information from JSON into the product instance
 	//or report an error
 	if err = json.Unmarshal(reqBody, &updateProduct); err != nil {
-		log.Printf("Body parse error, %v", err)
+		log.Printf("Body parse error, %v", err.Error())
 		w.WriteHeader(400)
 		return
 	}
