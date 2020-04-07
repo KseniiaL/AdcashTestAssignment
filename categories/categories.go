@@ -67,6 +67,7 @@ func GetCategoryById (w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	} else {
+		w.WriteHeader(412)
 		fmt.Fprintf(w, "Category with ID %s not found", categoryID)
 	}
 }
@@ -91,6 +92,13 @@ func CreateCategory (w http.ResponseWriter, r *http.Request) {
 	if err = json.Unmarshal(reqBody, &newCategory); err != nil {
 		log.Printf("Body parse error, %v", err.Error())
 		w.WriteHeader(400)
+		return
+	}
+
+	//CategoryName is required field
+	if len(newCategory.CategoryName) == 0 {
+		w.WriteHeader(422)
+		fmt.Fprintf(w, "Kindly enter data with the category name in order to create new category")
 		return
 	}
 
@@ -124,6 +132,7 @@ func DeleteCategory (w http.ResponseWriter, r *http.Request) {
 
 	//report category with the given id not exists
 	if categoriesLength == len(Categories) {
+		w.WriteHeader(412)
 		fmt.Fprintf(w, "Category with ID %s not found", categoryID)
 	}
 }
@@ -158,7 +167,6 @@ func UpdateCategory (w http.ResponseWriter, r *http.Request) {
 			singleCategory.CategoryDescription = updateCategory.CategoryDescription
 
 			Categories = append(Categories[:i], singleCategory)
-
 			//return the Category in response
 			//or report an error
 			if err = json.NewEncoder(w).Encode(singleCategory); err != nil {

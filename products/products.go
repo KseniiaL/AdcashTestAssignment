@@ -127,7 +127,7 @@ func DeleteProduct(w http.ResponseWriter, r *http.Request) {
 // and appends to the []products slice
 func CreateProduct(w http.ResponseWriter, r *http.Request) {
 	var newProduct product
-
+//TODO create empty product handling
 	//get the information containing in request's body
 	//or report an error
 	reqBody, err := ioutil.ReadAll(r.Body)
