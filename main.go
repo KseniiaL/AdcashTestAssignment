@@ -1,3 +1,4 @@
+//package main initializes router and describes all the routes and funcs to handle
 package main
 
 import (
@@ -26,7 +27,8 @@ func main() {
 	router.HandleFunc("/products/new", products.CreateProduct).Methods("POST")
 	router.HandleFunc("/products/{id}", products.UpdateProduct).Methods("PATCH")
 	router.HandleFunc("/products/{id}", products.DeleteProduct).Methods("DELETE")
-	router.HandleFunc("/categories/{id}/products", products.GetProductsOfCategory).Methods("GET")
+	router.HandleFunc("/products/category/{id}", products.GetProductsOfCategory).Methods("GET")
 	fmt.Println("Server running on: 8080")
+	//run the server
 	log.Fatal(http.ListenAndServe(":8080", router))
 }

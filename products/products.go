@@ -74,7 +74,9 @@ func GetProductById(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	} else {
+		w.WriteHeader(412)
 		fmt.Fprintf(w, "Product with ID %s not found", productID)
+		return
 	}
 }
 
@@ -115,7 +117,9 @@ func DeleteProduct(w http.ResponseWriter, r *http.Request) {
 
 	//report product with the given id not exists
 	if productsLength == len(products) {
+		w.WriteHeader(412)
 		fmt.Fprintf(w, "Product with ID %s not found", productID)
+		return
 	}
 }
 
@@ -164,7 +168,9 @@ func CreateProduct(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	} else {
+		w.WriteHeader(422)
 		fmt.Fprintf(w, "Category with ID \"%s\" not found. Kindly enter data with the category ID", newProduct.CategoryID)
+		return
 	}
 }
 
@@ -180,6 +186,7 @@ func UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	reqBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		fmt.Fprintf(w, "Kindly enter data with the product name and description only in order to update")
+		log.Fatal(err.Error())
 	}
 
 	//unmarshal the information from JSON into the product instance
