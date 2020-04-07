@@ -127,7 +127,6 @@ func DeleteProduct(w http.ResponseWriter, r *http.Request) {
 // and appends to the []products slice
 func CreateProduct(w http.ResponseWriter, r *http.Request) {
 	var newProduct product
-//TODO create empty product handling
 	//get the information containing in request's body
 	//or report an error
 	reqBody, err := ioutil.ReadAll(r.Body)
@@ -143,6 +142,14 @@ func CreateProduct(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(400)
 		return
 	}
+
+	//ProductName is required field
+	if len(newProduct.ProductName) == 0 {
+		w.WriteHeader(422)
+		fmt.Fprintf(w, "Kindly enter data with the product name in order to create new category")
+		return
+	}
+
 	//generate unique productID
 	newProduct.ProductID = xid.New().String()
 

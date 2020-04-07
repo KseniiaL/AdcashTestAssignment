@@ -196,6 +196,25 @@ func TestCreateProductNonExistingCategory(t *testing.T) {
 	assert.Equal(t, initialLen, len(products), "Expected length to stay same after creating new product")
 }
 
+func TestCreateProductEmptyBody(t *testing.T) {
+	//initial length of []products
+	initialLen := len(products)
+	//parameters passed to request body
+	requestBody := &product{}
+	jsonProduct, _ := json.Marshal(requestBody)
+	req, err := http.NewRequest("POST", "/products/new", bytes.NewBuffer(jsonProduct))
+	if err != nil {
+		t.Fatal(err)
+	}
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(CreateProduct)
+
+	handler.ServeHTTP(rr, req)
+
+	assert.Equal(t, 422, rr.Code, "Created response is expected")
+	assert.Equal(t, initialLen, len(products), "Expected length to increase after creating new product")
+}
+
 func TestUpdateProduct(t *testing.T) {
 	//initial length of []products
 	initialLen := len(products)
