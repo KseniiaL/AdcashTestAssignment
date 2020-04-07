@@ -188,3 +188,24 @@ func TestUpdateCategory(t *testing.T) {
 	assert.Equal(t, 200, rr.Code, "OK response is expected")
 	assert.Equal(t, initialLen, len(Categories), "Expected length to stay the same after creating new product")
 }
+
+func TestUpdateCategoryWrongJSONSyntax(t *testing.T) {
+	//initial length of []products
+	initialLen := len(Categories)
+	//parameters passed to request body
+	requestBody := `{{"CategoryID":"bq4fasj7jhfi127rimlg","CategoryName":"Name",,,}}`
+	req, err := http.NewRequest("PATCH", "/categories/bq4fasj7jhfi127rimlg", bytes.NewBufferString(requestBody))
+	req = mux.SetURLVars(req, map[string]string{"id": "bq4fasj7jhfi127rimlg"})
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(UpdateCategory)
+
+	handler.ServeHTTP(rr, req)
+
+	assert.Equal(t, 400, rr.Code, "Bad request response is expected")
+	assert.Equal(t, initialLen, len(Categories), "Expected length to stay the same after updating product")
+}

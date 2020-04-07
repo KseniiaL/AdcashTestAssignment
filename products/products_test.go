@@ -215,6 +215,25 @@ func TestCreateProductEmptyBody(t *testing.T) {
 	assert.Equal(t, initialLen, len(products), "Expected length to increase after creating new product")
 }
 
+func TestCreateProductWrongJSONSyntax(t *testing.T) {
+	//initial length of []Categories
+	initialLen := len(products)
+	//parameters passed to request body
+	requestBody := `{{"ProductID":"bq4foj37jhfipc5nqri0","ProductName":"Name",,,}}`
+	req, err := http.NewRequest("POST", "/products/new", bytes.NewBufferString(requestBody))
+	if err != nil {
+		t.Fatal(err)
+	}
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(CreateProduct)
+
+	handler.ServeHTTP(rr, req)
+
+	assert.Equal(t, 400, rr.Code, "Bad request response is expected")
+	assert.Equal(t, initialLen, len(products), "Expected length to stay the same after wrong syntax json")
+
+}
+
 func TestUpdateProduct(t *testing.T) {
 	//initial length of []products
 	initialLen := len(products)
@@ -240,4 +259,24 @@ func TestUpdateProduct(t *testing.T) {
 
 	assert.Equal(t, 200, rr.Code, "OK response is expected")
 	assert.Equal(t, initialLen, len(products), "Expected length to stay the same after creating new product")
+}
+
+func TestUpdateProductWrongJSONSyntax(t *testing.T) {
+	//initial length of []Categories
+	initialLen := len(products)
+	//parameters passed to request body
+	requestBody := `{{"ProductID":"bq4foj37jhfipc5nqri0","ProductName":"Name",,,}}`
+	req, err := http.NewRequest("POST", "/products/bq4foj37jhfipc5nqri0", bytes.NewBufferString(requestBody))
+	req = mux.SetURLVars(req, map[string]string{"id": "bq4foj37jhfipc5nqri0"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(UpdateProduct)
+
+	handler.ServeHTTP(rr, req)
+
+	assert.Equal(t, 400, rr.Code, "Bad request response is expected")
+	assert.Equal(t, initialLen, len(products), "Expected length to stay the same after wrong syntax json")
+
 }
